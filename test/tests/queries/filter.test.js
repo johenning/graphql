@@ -867,5 +867,45 @@ describe('graphql - filter', () => {
         expect(response.data).toEqual({ data })
       })
     })
-  })
+
+    test('query - cannot filter string key with integer', async () => {
+        const query = gql`
+          {
+            AdminService {
+              Books(filter: { ID: { eq: 11 } }) {
+                nodes {
+                  title
+                  stock
+                }
+              }
+            }
+          }
+        `
+        const response = await POST('/graphql', { query })
+        expect(response.data.errors[0].message).toMatchInlineSnapshot(`"String cannot represent a non string value: 11"`)
+    })
+    test('mutation query - cannot filter string key with integer', async () => {
+        const query = gql`
+            mutation {
+              AdminService {
+                Books {delete (filter: { ID: { eq: 11 } }) }
+              }
+          }
+        `
+        const response = await POST('/graphql', { query })
+        expect(response.data.errors[0].message).toMatchInlineSnapshot(`"String cannot represent a non string value: 11"`)
+    })
+
+    test('mutation query - can filter string key with string', async () => {
+        const query = gql`
+            mutation {
+              AdminService {
+                Books {delete (filter: { ID: { eq: "11" } }) }
+              }
+          }
+        `
+        const response = await POST('/graphql', { query })
+        expect(response.data.errors[0].message).not.toEqual(`Int cannot represent non-integer value: "11"`)
+    })
+    })
 })
